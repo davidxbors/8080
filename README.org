@@ -2,10 +2,7 @@
 #+AUTHOR:     David Bors
 #+DATE:       02.12.2021
 #+EMAIL:      daviddvd267@gmail.com
-
-* Intel 8080 Emulator
-
-After making the CHIP8 emulator I decided to try my luck at building a 8080 emulator, designed especially for running Space Invaders.
+#+DESCRIPTION: After making the CHIP8 emulator I decided to try my luck at building a 8080 emulator, designed especially for running Space Invaders.
 
 * About Intel 8080 Emulator
 
@@ -23,6 +20,9 @@ Many 8080A compatbile processor were manufactured:
 - MHB8080A in Czechoslovakia
 - MMN8080 in Romania
 - M5L8080 made by Mitsubishi Electric
+- TMS8080 Texas Instruments
+- SAB8080 Siemens
+- Am9080 AMD 
 
 And Lansdale Semiconductors still manufactures it.
 
