@@ -30,4 +30,4 @@ And Lansdale Semiconductors still manufactures it.
 
 * References
 
-[ [https://www.emutalk.net/threads/space-invaders.38177/] [Tehnical information about the 8080] ] 
+[[https://www.emutalk.net/threads/space-invaders.38177/][Tehnical information about the 8080]] 
