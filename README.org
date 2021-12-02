@@ -4,6 +4,8 @@
 #+EMAIL:      daviddvd267@gmail.com
 #+DESCRIPTION: After making the CHIP8 emulator I decided to try my luck at building a 8080 emulator, designed especially for running Space Invaders.
 
+After making the CHIP8 emulator I decided to try my luck at building a 8080 emulator, designed especially for running Space Invaders.
+
 * About Intel 8080 Emulator
 
 Intel 8080 (/eighty-eighty/) is the second 8-bit microprocessor designed and manufactured by Intel.
