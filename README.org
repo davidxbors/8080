@@ -1,0 +1,31 @@
+#+TITLE:      Intel 8080 Emulator
+#+AUTHOR:     David Bors
+#+DATE:       02.12.2021
+#+EMAIL:      daviddvd267@gmail.com
+
+* Intel 8080 Emulator
+
+After making the CHIP8 emulator I decided to try my luck at building a 8080 emulator, designed especially for running Space Invaders.
+
+* About Intel 8080 Emulator
+
+Intel 8080 (/eighty-eighty/) is the second 8-bit microprocessor designed and manufactured by Intel.
+
+It first appeared in April 1974 as an extended and enhanced variant of the earlier 8008.
+
+The 8080 was explicitly designed to be a general-purpose microprocessor.
+
+It was the most popular 8-bit processor and it definitely influenced the computing world in it's time.
+
+Many 8080A compatbile processor were manufactured:
+
+- KR580VM80A in the Soviet Union
+- MHB8080A in Czechoslovakia
+- MMN8080 in Romania
+- M5L8080 made by Mitsubishi Electric
+
+And Lansdale Semiconductors still manufactures it.
+
+* References
+
+[ [https://www.emutalk.net/threads/space-invaders.38177/] [Tehnical information about the 8080] ] 
