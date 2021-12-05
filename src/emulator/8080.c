@@ -152,7 +152,29 @@ void push (uint8_t high, uint8_t low)
 	sp -= 2;
 }
 
-void emulate8080 ()
+unsigned char cycles8080[] = {
+	4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x00..0x0f
+	4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4, //0x10..0x1f
+	4, 10, 16, 5, 5, 5, 7, 4, 4, 10, 16, 5, 5, 5, 7, 4, //etc
+	4, 10, 13, 5, 10, 10, 10, 4, 4, 10, 13, 5, 5, 5, 7, 4,
+	
+	5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5, //0x40..0x4f
+	5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
+	5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
+	7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 7, 5,
+	
+	4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4, //0x80..8x4f
+	4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+	4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+	4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+	
+	11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11, //0xc0..0xcf
+	11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11, 
+	11, 10, 10, 18, 17, 11, 7, 11, 11, 5, 10, 5, 17, 17, 7, 11, 
+	11, 10, 10, 4, 17, 11, 7, 11, 11, 5, 10, 4, 17, 17, 7, 11, 
+};
+
+int emulate8080 ()
 {
 	unsigned char *opcode = (memory + pc);
 	pc ++;
@@ -1170,8 +1192,254 @@ void emulate8080 ()
 		pc = 0x18;
 		break;
 	}
+	/* RPO */
+	case 0xe0:
+		if (flags.p == 0) {
+			pc = memory[sp] | (memory[sp + 1] << 8);
+			sp += 2;
+		}
+		break;
+		/* POP H */
+	case 0xe1:
+		pop(&h, &l);
+		break;
+		/* LPO */
+	case 0xe2:
+		if (flags.p == 0)
+			pc = (opcode[2] << 8) | opcode[1];
+		else
+			pc += 2;
+		break;
+		/* XTHL */
+	case 0xe3:
+	{
+		uint8_t h = h;
+		uint8_t l = l;
+		l = memory[sp];
+		h = memory[sp+1];
+		write_mem(sp, l);
+		write_mem(sp + 1, h);
+		break;
 	}
+	/* CPO addr */
+	case 0xe4:
+		if (flags.p == 0) {
+			uint16_t return_addr = pc + 2;
+			write_mem(sp - 1, (return_addr >> 8) & 0xff);
+			write_mem(sp - 2, (return_addr & 0xff));
+			sp -= 2;
+			pc = (opcode[2] << 8) | opcode[1];
+		} else
+			pc += 2;
+		break;
+		/* PUSH H */
+	case 0xe5:
+		push(h, l);
+		break;
+		/* ANI byte */
+	case 0xe6:
+	{
+		a &= opcode[1];
+		logic_flags();
+		pc++;
+		break;
+	}
+	/* RST 4 */
+	case 0xe7:
+	{
+		uint16_t return_addr = pc + 2;
+		write_mem(sp - 1, (return_addr >> 8) & 0xff);
+		write_mem(sp - 2, (return_addr & 0xff));
+		pc = 0x20;
+		break;
+	}
+	/* RPE */
+	case 0xe8:
+		if (flags.p) {
+			pc = memory[sp] | (memory[sp + 1] << 8);
+			sp += 2;
+		}
+		break;
+		/* PCHL */
+	case 0xe9:
+		pc = (h << 8) | l;
+		break;
+		/* JPE addr */
+	case 0xea:
+		if (flags.p)
+			pc = (opcode[2] << 8) | opcode[1];
+		else
+			pc += 2;
+		break;
+		/* XCHG */
+	case 0xeb:
+	{
+		uint8_t aux = d;
+		d = h;
+		h = aux;
+		aux = e;
+		e = l;
+		l = aux;
+		break;
+	}
+	/* CPE addr */
+	case 0xec:
+		if (flags.p) {
+			uint16_t return_addr = pc + 2;
+			write_mem(sp - 1, (return_addr >> 8) & 0xff);
+			write_mem(sp - 2, (return_addr & 0xff));
+			sp -= 2;
+			pc = (opcode[2] << 8) | opcode[1];
+		} else
+			pc += 2;
+		break;
+	case 0xed:
+		unknown_instruction();
+		/* XRI data */
+	case 0xee:
+	{
+		uint8_t x = a ^ opcode[1];
+		flags_zsp(x);
+		flags.cy = 0;
+		a = x;
+		pc++;
+		break;
+	}
+	/* RST 5 */
+	case 0xef:
+	{
+		uint16_t return_addr = pc + 2;
+		write_mem(sp - 1, (return_addr >> 8) & 0xff);
+		write_mem(sp - 2, (return_addr & 0xff));
+		sp -= 2;
+		pc = 0x28;
+	}
+	/* RP */
+	case 0xf0:
+		if (!flags.s) {
+			pc = memory[sp] | (memory[sp + 1] << 8);
+			sp += 2;
+		}
+		break;
+		/* POP PSW */
+	case 0xf1:
+		pop(&a, (unsigned char *) &flags);
+		break;
+		/* JP addr */
+	case 0xf2:
+		if (!flags.s)
+			pc = (opcode[2] << 8) | opcode[1];
+		else
+			pc += 2;
+		break;
+		/* DI */
+	case 0xf3:
+		int_enable = 0;
+		break;
+		/* CP addr */
+	case 0xf4:
+		if (!flags.s) {
+			uint16_t return_addr = pc + 2;
+			write_mem(sp - 1, (return_addr >> 8) & 0xff);
+			write_mem(sp - 2, (return_addr & 0xff));
+			sp -= 2;
+			pc = (opcode[2] << 8) | opcode[1];
+		} else
+			pc += 2;
+		break;
+		/* PUSH PSW */
+	case 0xf5:
+		push(a, *(unsigned char *) &flags);
+		break;
+		/* ORI byte */
+	case 0xf6:
+	{
+		uint8_t x = a | opcode[1];
+		flags_zsp(x);
+		flags.cy = 0;
+		a = x;
+		pc++;
+		break;
+	}
+	/* RST 6 */
+	case 0xf7:
+	{
+		uint16_t return_addr = pc + 2;
+		write_mem(sp - 1, (return_addr >> 8) & 0xff);
+		write_mem(sp - 2, (return_addr & 0xff));
+		sp -= 2;
+		pc = 0x30;
+		break;
+	}
+	/* RM */
+	case 0xf8:
+		if (flags.s) {
+			pc = memory[sp] | (memory[sp+1] << 8);
+			sp += 2;
+		}
+		break;
+		/* SPHL */
+	case 0xf9:
+		sp = l | (h << 8);
+		break;
+		/* JM addr */
+	case 0xfa:
+		if (flags.s)
+			pc = (opcode[2] << 8) | opcode[1];
+		else
+			pc += 2;
+		break;
+		/* EI */
+	case 0xfb:
+		int_enable = 1;
+		break;
+		/* CM addr */
+	case 0xfc:
+		if (flags.s) {
+			uint16_t return_addr = pc + 2;
+			write_mem(sp - 1, (return_addr >> 8) & 0xff);
+			write_mem(sp - 2, (return_addr & 0xff));
+			sp -= 2;
+			pc = (opcode[2] << 8) | opcode[1];
+		} else
+			pc += 2;
+		break;
+	case 0xfd:
+		unknown_instruction();
+		break;
+		/* CPI byte */
+	case 0xfe:
+	{
+		uint8_t x = a - opcode[1];
+		flags_zsp(x);
+		flags.cy = (a < opcode[1]);
+		pc++;
+		break;
+	}
+		/* RST 7 */
+	case 0xff:
+	{
+		uint16_t return_addr = pc + 2;
+		write_mem(sp - 1, (return_addr >> 8) & 0xff);
+		write_mem(sp - 2, (return_addr & 0xff));
+		sp -= 2;
+		pc = 0x38;
+		break;
+	}
+	}
+#if PRINTOPS
+	printf("\t");
+	printf("%c", state->cc.z ? 'z' : '.');
+	printf("%c", state->cc.s ? 's' : '.');
+	printf("%c", state->cc.p ? 'p' : '.');
+	printf("%c", state->cc.cy ? 'c' : '.');
+	printf("%c  ", state->cc.ac ? 'a' : '.');
+	printf("A $%02x B $%02x C $%02x D $%02x E $%02x H $%02x L $%02x SP %04x\n", state->a, state->b, state->c,
+           state->d, state->e, state->h, state->l, state->sp);
+#endif
+	return cycles8080[*opcode];	
 }
+
 
 
 int main (void)
