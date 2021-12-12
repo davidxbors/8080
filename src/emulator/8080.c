@@ -1440,7 +1440,12 @@ int emulate8080 ()
 	return cycles8080[*opcode];	
 }
 
-
+void generate_interrupt (int interrupt_num)
+{
+	push((pc & 0xFF00) >> 8, (pc & 0xff));
+	pc = 8 * interrupt_num;
+	int_enable = 0;
+}
 
 int main (void)
 {

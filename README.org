@@ -28,6 +28,14 @@ Many 8080A compatbile processor were manufactured:
 
 And Lansdale Semiconductors still manufactures it.
 
+* About this emulator
+
+This emulator is written in C99. It's intended to be used as a core for other projects and not a standalone project.
+
+One might use this core and embed in another project that will handle io operations, memory and graphics.
+
+At this moment I'm using this core to create Space Invaders emulators for OSX and iOS.
+
 * References
 
 [[https://www.emutalk.net/threads/space-invaders.38177/][Tehnical information about the 8080]] 
